@@ -29,7 +29,7 @@ cursor /Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard-ai-engin
 ├── data/                     # review-log.jsonl: нормализованные выводы, не сырые комментарии
 ├── references/               # отчёты анализа (review-feedback-analysis-report.md)
 ├── reports/                  # решения по улучшениям (self-review-improvement-decisions.md)
-├── prompts/                  # review-feedback-analyzer.md
+├── prompts/                  # review-feedback-analyzer.md, prompt-builder.md, prompt-builder.examples.md
 └── scripts/                  # importer Bitbucket и тесты
 ```
 
@@ -56,6 +56,23 @@ cursor /Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard-ai-engin
 ```
 
 Анализ идёт по `feedback.md` и `context.md`. `comments.json` и `metadata.json` нужны только при импорте через API.
+
+## Prompt Builder
+
+Превращает неполный запрос и контекст в промпт для следующего запуска coding-агента. Сам ничего не правит: работает на чтение, приложение `../dashboard` использует только для проверки путей. Режимы: `research`, `plan`, `implement`, `debug`, `review`, `continue`. Если режим не указан, builder предложит его сам.
+
+В чате Cursor, открытом в этой папке:
+
+```text
+Собери промпт по prompts/prompt-builder.md.
+mode: <research|plan|implement|debug|review|continue>   # необязательно
+
+<задача, контекст, ошибки/логи/diff, предыдущий ответ агента, ограничения>
+```
+
+Ответ: режим с причиной, недостающий контекст (если важен), готовый промпт одним блоком, не больше трёх пунктов «почему». Промпт копируешь в новый чат, открытый на `../dashboard`.
+
+Ручные тесты на трёх примерах: [`prompts/prompt-builder.examples.md`](prompts/prompt-builder.examples.md).
 
 ## Bitbucket importer (отложен)
 
