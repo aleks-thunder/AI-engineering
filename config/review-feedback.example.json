@@ -1,0 +1,14 @@
+{
+  "workspace": "lavinmedia",
+  "repoSlug": "dashboard-moved",
+  "auth": "bearer",
+  "atlassianEmail": "",
+  "author": {
+    "uuid": "",
+    "accountId": ""
+  },
+  "techLead": {
+    "uuid": "",
+    "accountId": ""
+  }
+}

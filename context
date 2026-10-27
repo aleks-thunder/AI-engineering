@@ -1,0 +1,66 @@
+# Контекст
+
+Я развиваю self-review skill для Angular-проекта на основе замечаний техлида из 10 исторических PR. Все комментарии в этих PR закрыты, код давно в проде.
+
+Два репозитория, их нельзя путать:
+- **Текущий код:** GitHub `lavinmedia/dashboard`, локально `/Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard` (Angular 21.2.x, зональный, 188 из 206 компонентов OnPush). Сюда относятся skill и правила.
+- **Исторический источник ревью:** Bitbucket `lavinmedia/dashboard-moved`. Доступа к нему нет, данные лежат локально как вставки страниц.
+
+# Что уже сделано
+
+1. **AI-workspace отделён от репозитория приложения.**
+   - Путь: `/Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard-ai-engineering/` (не git-репозиторий).
+   - Открывается через `dashboard-ai-engineering.code-workspace`, `../dashboard` подключён как read-only reference.
+   - Внутри:
+     - `inbox/review-feedback/PR-01…PR-10` (вставка страниц Bitbucket),
+     - `prompts/review-feedback-analyzer.md`,
+     - `references/review-feedback-analysis-report.md` (первый анализ),
+     - `data/review-log.jsonl` (10 записей `proposed`),
+     - `scripts/` (importer Bitbucket и тесты, не используется, не удалять),
+     - `reports/self-review-improvement-decisions.md`.
+   - В репозитории приложения `ai-engineering/` удалён, `.gitignore` приложения возвращён к HEAD (HEAD `df9977e51`, `master`, remotes не менялись).
+2. **Проведён аудит 14 предложений** (10 из `review-log.jsonl` + 4 из §2.11 отчёта). Результат записан в `reports/self-review-improvement-decisions.md`, там же evidence, риски и черновики формулировок. ID: SR-01…SR-14.
+
+# Итоговые решения (ничего пока не внедрено)
+
+- **ACCEPT (6):**
+  - SR-03: переписать секцию Change detection. Нынешний текст советует `markForCheck()` после записи в signal, и это противоречит замечаниям техлида.
+  - SR-02: уточнить `effect` и `linkedSignal`, а также случай «signal + emit того же значения».
+  - SR-01: механический проход по добавленным `?.` и `??` в Step 3.
+  - SR-06: три примера в bullet про мёртвые ветки.
+  - SR-04: сброс флага HTTP на пути success, error и finalize.
+  - SR-09: проверять runtime-контракт при правке union/литералов/валидации.
+- **REJECT (5):** SR-05, SR-07, SR-11, SR-13, SR-14.
+- **DEFER (3):** SR-08, SR-10, SR-12.
+- **Порядок внедрения:** SR-03, SR-02, SR-01, SR-06, SR-04, SR-09.
+- Прежние отчёты ошибались в атрибуции PR и в счёте комментариев. Верить `reports/…decisions.md` (§3.3, §3.4), а не `references/…analysis-report.md`.
+
+# Ограничения (строго)
+
+- Не менять существующий skill `.agents/skills/self-review/SKILL.md` и не внедрять ничего без моего явного «внедряй».
+- Не менять код приложения, `.gitignore`, ветки, историю и remotes.
+- Не коммитить и не пушить.
+- Не обращаться к Bitbucket и не пытаться аутентифицироваться.
+- Не читать и не печатать `.env` и любые токены.
+- Не использовать `any` и касты к `any`.
+- `.agents/skills/angular-developer/` вендорный, его не править. Локальные добавления идут в `.agents/skills/angular-developer-extras/`.
+- Одна миграция на ветку (правило репозитория).
+- Отвечать на русском, кратко.
+- Не заявлять, что тесты или проверка прошли, если их не запускали.
+
+# Что не проверено
+
+- Фикстуры-диффы и сравнение результатов self-review до и после правки.
+- Количество нарушений правила `prefer-host-metadata-property` (SR-12).
+- Тесты importer после переезда workspace.
+- Фактическая работа `no-explicit-any` в lint (не запускалось).
+- Исход споров по PR 829 и 830, во вставке его нет.
+- Дата `2026-03-26` в `review-log.jsonl` и отчёте, вероятно, неверная.
+
+# Открытые вопросы
+
+- SR-05: перевести в DEFER и добавить фразу про замену `Destroyable` и `takeUntil(destroy$)` на `DestroyRef` + `takeUntilDestroyed()`? Для этого команда должна подтвердить, что `Destroyable` устарел.
+
+# Что делать
+
+Сначала прочитай `reports/self-review-improvement-decisions.md`, затем задай мне уточняющие вопросы, если они нужны. Реализацию начинай только после моего подтверждения и по одному пункту за раз, начиная с SR-03.

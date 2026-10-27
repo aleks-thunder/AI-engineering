@@ -1,0 +1,8 @@
+# Этот workspace не является репозиторием приложения. Если его когда-нибудь инициализируют как git,
+# сырые данные ревью и секреты должны остаться локальными.
+.env
+config/review-feedback.local.json
+inbox/review-feedback/*/
+inbox/review-feedback/last-import-report.json
+data/*.jsonl
+.DS_Store
