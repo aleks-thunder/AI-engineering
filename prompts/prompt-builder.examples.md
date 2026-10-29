@@ -1,101 +1,101 @@
-# Prompt Builder: ручные тестовые примеры
+# Prompt Builder: manual test examples
 
-Как запускать: в чате Cursor, открытом в `dashboard-ai-engineering`, вставь инструкцию из README (раздел «Prompt Builder»), затем один из входов ниже. Сравни ответ с чек-листом. Результаты ниже **не заполнены**: примеры ещё не прогонялись.
+How to run: in a Cursor chat opened on `dashboard-ai-engineering`, paste the instruction from the README ("Prompt Builder" section), then one of the inputs below. Compare the answer with the checklist. The results below are **not filled in**: the examples have not been run yet.
 
-Входы синтетические. Названия файлов в них намеренно неполные или отсутствуют: проверяется, что builder ищет их в `../dashboard`, а не выдумывает.
+The inputs are synthetic. File names in them are intentionally incomplete or missing: the test checks that the builder looks them up in `../dashboard` instead of inventing them.
 
 ---
 
-## Пример 1. Обычная Angular-задача
+## Example 1. Ordinary Angular task
 
-**Вход**
+**Input**
 
 ```text
-Хочу добавить кнопку "Reset filters" в блок фильтров отчётов (reports).
-Она должна сбрасывать все фильтры в значения по умолчанию.
-Дизайна нет, делаем в стиле существующих кнопок.
+I want to add a "Reset filters" button to the reports filters block.
+It should reset all filters to their default values.
+There is no design; follow the style of the existing buttons.
 ```
 
-**Ожидаемое поведение**
+**Expected behavior**
 
-- Режим: `plan` или `implement`. Если место правки найдено однозначно, допустим `implement`. Выбор объяснён одной фразой.
-- Builder ищет в `../dashboard/frontend/src/app` (например, `features/reports`, `shared/containers/filters`) и помечает найденное как `[verified: path]` или `candidate`. Путей, которых нет в репозитории, быть не должно.
-- В Unknowns: что считается «значением по умолчанию», где живёт состояние фильтров (форма, store), нужен ли сброс URL-параметров, если они есть. Это не блокирующие вопросы.
-- Non-goals: нет редизайна и рефакторинга фильтров.
-- Конвенции: `AGENTS.md`, `angular-developer` и `angular-developer-extras` SKILL.md. Без `any`.
-- Validation: `check-types`, `lint` из `frontend/package.json`. Если рядом есть spec, то и его.
-- Reporting: честный отчёт о непройденных и незапущенных проверках, без commit/push.
-- Сам промпт самодостаточен и на английском.
+- Mode: `plan` or `implement`. If the place to change is found unambiguously, `implement` is acceptable. The choice is justified in one sentence.
+- The builder searches `../dashboard/frontend/src/app` (for example `features/reports`, `shared/containers/filters`) and marks what it finds as `[verified: path]` or `candidate`. There must be no paths that do not exist in the repository.
+- Unknowns: what counts as the "default value", where the filter state lives (form, store), whether URL parameters need resetting if there are any. These are not blocking questions.
+- Non-goals: no redesign and no refactoring of the filters.
+- Conventions: `AGENTS.md`, `angular-developer` and `angular-developer-extras` SKILL.md. No `any`.
+- Validation: `check-types`, `lint` from `frontend/package.json`, plus the spec if one sits next to the code.
+- Reporting: an honest report of checks that were not run or failed, no commit/push.
+- The prompt itself is self-contained and in English.
 
 ---
 
-## Пример 2. Баг-репорт с неполной информацией
+## Example 2. Bug report with incomplete information
 
-**Вход**
+**Input**
 
 ```text
-Иногда в таблице логов пропадают данные после смены фильтра, надо починить.
+Sometimes data disappears from the logs table after changing a filter, please fix it.
 ```
 
-**Ожидаемое поведение**
+**Expected behavior**
 
-- Режим: `debug` (причина неизвестна).
-- Builder не предлагает исправление и не называет причину.
-- Missing context: короткий и по делу (какая страница или таблица, шаги воспроизведения, ошибка в консоли/сети, доступно ли воспроизведение). Не больше 3 вопросов. Вопросы не блокируют: промпт выдан как `DRAFT` или с Unknowns.
-- Context разделяет: Known facts (только симптом со слов пользователя `[user]`), Assumptions (например, гонка запросов, это гипотеза), Unknowns (шаги, среда, частота).
-- `Inspect first`: поиск компонентов в `features/logs` (если найдены, с меткой `candidate`/`verified`), обработка смены фильтра и запросов (`switchMap` и подобное, только как «проверить»).
-- Агент должен: воспроизвести или объяснить, почему нельзя; сформулировать 2–4 гипотезы; назвать корневую причину с доказательством; править код только если разрешено в Scope.
-- В промпте запрещено маскировать симптом (`?.`, пустой `catch`).
+- Mode: `debug` (the cause is unknown).
+- The builder does not propose a fix and does not name a cause.
+- Missing context: short and to the point (which page or table, reproduction steps, console/network error, whether it can be reproduced). At most 3 questions. The questions are not blocking: the prompt is delivered as a `DRAFT` or with Unknowns.
+- Context separates: Known facts (only the symptom as stated by the user, `[user]`), Assumptions (for example a request race, which is only a hypothesis), Unknowns (steps, environment, frequency).
+- `Inspect first`: search for components in `features/logs` (if found, labeled `candidate`/`verified`), filter-change and request handling (`switchMap` and similar, only as "check").
+- The agent must: reproduce or explain why it cannot; form 2–4 hypotheses; name the root cause with evidence; edit code only if Scope allows it.
+- The prompt forbids masking the symptom (`?.`, empty `catch`).
 
 ---
 
-## Пример 3. Неудачная попытка прошлого агента (`continue`)
+## Example 3. Failed previous agent attempt (`continue`)
 
-**Вход**
+**Input**
 
 ```text
 mode: continue
 
-Исходная задача: перенести фильтры отчётов с combineLatest на toSignal.
+Original task: migrate the reports filters from combineLatest to toSignal.
 
-Ответ прошлого агента:
-"Готово. Я заменил combineLatest на toSignal в reports-filters и обновил шаблон.
-Все тесты проходят."
+Previous agent's response:
+"Done. I replaced combineLatest with toSignal in reports-filters and updated the template.
+All tests pass."
 
-После этого у меня:
-- `npm run check-types` падает: "Type 'Signal<Filters | undefined>' is not assignable to type 'Filters'" в reports-filters.component.ts
-- в браузере фильтры не применяются при первом открытии страницы
+After that I see:
+- `npm run check-types` fails: "Type 'Signal<Filters | undefined>' is not assignable to type 'Filters'" in reports-filters.component.ts
+- in the browser the filters are not applied when the page is first opened
 
-Свои незакоммиченные правки в соседнем файле я не хочу потерять.
+I do not want to lose my uncommitted changes in a neighboring file.
 ```
 
-**Ожидаемое поведение**
+**Expected behavior**
 
-- Режим: `continue` (указан).
-- Context содержит все пять блоков: `Completed by the previous agent`, `Incomplete`, `Failed, with evidence`, `Next step`, `Do not repeat`.
-- Утверждения «готово» и «все тесты проходят» помечены `[prev-agent, unverified]`. Builder не принимает их как факт и не повторяет «тесты проходят».
-- Failed: точный текст ошибки `check-types` процитирован дословно, симптом с первым открытием страницы вынесен отдельно. Гипотеза «`toSignal` без `initialValue` даёт `undefined`» — только `Assumption`, не диагноз.
-- `Inspect first`: `git status`, `git diff`, чтение `reports-filters.component.ts` (путь проверен или `unverified`), сверка заявлений прошлого агента с кодом.
-- Do not repeat / Scope: не откатывать и не переписывать работу целиком, не трогать чужие незакоммиченные правки, не делать commit/push.
-- Next step — одно конкретное действие (воспроизвести ошибку типов и устранить причину), затем `check-types`, `lint`.
-- Нет заявлений об успехе проверок.
+- Mode: `continue` (given).
+- Context contains all five blocks: `Completed by the previous agent`, `Incomplete`, `Failed, with evidence`, `Next step`, `Do not repeat`.
+- The claims "Done" and "All tests pass" are marked `[prev-agent, unverified]`. The builder does not accept them as fact and does not repeat "tests pass".
+- Failed: the exact `check-types` error text is quoted verbatim, and the first-open symptom is listed separately. The hypothesis "`toSignal` without `initialValue` yields `undefined`" is only an `Assumption`, not a diagnosis.
+- `Inspect first`: `git status`, `git diff`, reading `reports-filters.component.ts` (path verified or `unverified`), reconciling the previous agent's claims with the code.
+- Do not repeat / Scope: do not revert or rewrite the whole work, do not touch the user's uncommitted changes, do not commit/push.
+- Next step is one concrete action (reproduce the type error and fix its cause), then `check-types`, `lint`.
+- No claims that checks passed.
 
 ---
 
-## Общий чек-лист для каждого прогона
+## General checklist for every run
 
-- [ ] Ответ в формате из 4 пунктов (режим, недостающий контекст при необходимости, промпт в блоке, ≤ 3 пункта «почему»).
-- [ ] Промпт самодостаточен: не ссылается на «выше», «как обсуждали».
-- [ ] Все пути проверены или помечены `unverified` / `candidate`.
-- [ ] Факты, допущения, неизвестное разделены.
-- [ ] Есть non-goals, критерии приёмки, конкретная валидация.
-- [ ] Есть требование честно отчитаться о непрогнанных и упавших проверках.
-- [ ] Нет придуманных команд (только из `frontend/package.json`).
-- [ ] Builder сам не менял файлы.
+- [ ] The answer follows the 4-part format (mode, missing context if needed, prompt in a block, ≤ 3 "why" bullets).
+- [ ] The prompt is self-contained: no "above", no "as we discussed".
+- [ ] All paths are verified or marked `unverified` / `candidate`.
+- [ ] Facts, assumptions and unknowns are separated.
+- [ ] Non-goals, acceptance criteria and concrete validation are present.
+- [ ] There is a requirement to honestly report checks that were not run or failed.
+- [ ] No invented commands (only those from `frontend/package.json`).
+- [ ] The builder did not modify any files itself.
 
-## Журнал прогонов (заполнять вручную)
+## Run log (fill in manually)
 
-| Дата | Пример | Режим в ответе | Чек-лист пройден | Замечания |
+| Date | Example | Mode in the answer | Checklist passed | Notes |
 |---|---|---|---|---|
 | | 1 | | | |
 | | 2 | | | |

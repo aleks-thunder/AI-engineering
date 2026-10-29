@@ -1,98 +1,98 @@
 # AI engineering workspace
 
-Локальное рабочее место для разбора ревью и улучшения skills и промптов. Оно лежит **вне** репозитория приложения и не попадает в его git.
+Local workspace for analyzing code review and improving skills and prompts. It lives **outside** the application repository and does not end up in its git.
 
-- Приложение: `../dashboard` (GitHub `lavinmedia/dashboard`)
-- Источник ревью: Bitbucket Cloud `lavinmedia/dashboard-moved`. Разбираемые PR приходят оттуда, а не из репозитория приложения.
-- Self-review skill: [`../dashboard/.agents/skills/self-review/SKILL.md`](../dashboard/.agents/skills/self-review/SKILL.md). Из этого workspace его не меняют без явного подтверждения.
+- Application: `../dashboard` (GitHub `lavinmedia/dashboard`)
+- Review source: Bitbucket Cloud `lavinmedia/dashboard-moved`. The PRs being analyzed come from there, not from the application repository.
+- Self-review skill: [`../dashboard/.agents/skills/self-review/SKILL.md`](../dashboard/.agents/skills/self-review/SKILL.md). It is not changed from this workspace without explicit confirmation.
 
-## Как открыть отдельно в Cursor
+## Open it separately in Cursor
 
 ```bash
 cursor /Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard-ai-engineering
 ```
 
-Или **File → Open Folder** и выберите эту папку. В обычное окно приложения она не добавляется.
+Or use **File → Open Folder** and select this folder. It is not added to the regular application window.
 
-Если нужно видеть обе папки в одном окне (например, при сверке с skill), откройте `dashboard-ai-engineering.code-workspace` из этой папки. Это отдельное окно, workspace приложения оно не меняет.
+To see both folders in one window (for example, when checking against the skill), open `dashboard-ai-engineering.code-workspace` from this folder. It is a separate window and does not change the application workspace.
 
-## Структура
+## Structure
 
 ```text
 .
 ├── README.md
-├── .env                      # секреты, только локально (в git не попадает)
+├── .env                      # secrets, local only (never committed)
 ├── .env.example
-├── .gitignore                # страховка, если эту папку когда-нибудь сделают репозиторием
-├── config/                   # review-feedback.example.json (+ локальный .local.json, не коммитится)
-├── inbox/review-feedback/    # сырые данные ревью: PR-*/feedback.md, context.md (локально)
-├── data/                     # review-log.jsonl: нормализованные выводы, не сырые комментарии
-├── references/               # отчёты анализа (review-feedback-analysis-report.md)
-├── reports/                  # решения по улучшениям (self-review-improvement-decisions.md)
+├── .gitignore                # keeps raw review data and secrets local
+├── config/                   # review-feedback.example.json (+ local .local.json, not committed)
+├── inbox/review-feedback/    # raw review data: PR-*/feedback.md, context.md (local)
+├── data/                     # review-log.jsonl: normalized findings, not raw comments
+├── references/               # analysis reports (review-feedback-analysis-report.md)
+├── reports/                  # improvement decisions (self-review-improvement-decisions.md)
 ├── prompts/                  # review-feedback-analyzer.md, prompt-builder.md, prompt-builder.examples.md
-└── scripts/                  # importer Bitbucket и тесты
+└── scripts/                  # Bitbucket importer and tests
 ```
 
-Поле `skillPath` в `data/review-log.jsonl` считается от корня репозитория приложения (`../dashboard`).
+The `skillPath` field in `data/review-log.jsonl` is relative to the application repository root (`../dashboard`).
 
-## Где что хранится
+## Where things are stored
 
-- **Сырой feedback по PR:** `inbox/review-feedback/PR-<NN>/feedback.md` (вставка со страницы Bitbucket) и `context.md` (задача). Папки `PR-01`…`PR-10` соответствуют PR 829, 830, 816, 812, 805, 769, 776, 747, 748, 656 в `dashboard-moved`.
-- **Отчёты и решения:** `references/` и `reports/`.
-- **Выводы анализа:** `data/review-log.jsonl`, одна строка на вывод.
+- **Raw PR feedback:** `inbox/review-feedback/PR-<NN>/feedback.md` (paste from the Bitbucket page) and `context.md` (the task). Folders `PR-01`…`PR-10` correspond to PRs 829, 830, 816, 812, 805, 769, 776, 747, 748, 656 in `dashboard-moved`.
+- **Reports and decisions:** `references/` and `reports/`.
+- **Analysis findings:** `data/review-log.jsonl`, one line per finding.
 
-## Приватность
+## Privacy
 
-Сырые комментарии ревью, `.env` и локальный конфиг в git и в чаты без необходимости не отправляются. Не коммитьте, не публикуйте и не пересылайте `inbox/` и `.env`. Токен в чат не отправляйте.
+Raw review comments, `.env` and the local config are not committed and are not sent to chats unless necessary. Do not commit, publish or forward `inbox/` and `.env`. Never send the token to a chat.
 
-## Как запустить анализ
+## How to run the analysis
 
-В чате Cursor, открытом в этой папке:
+In a Cursor chat opened on this folder:
 
 ```text
-Разбери review feedback из inbox/review-feedback/PR-01 … PR-10 по prompts/review-feedback-analyzer.md.
-Сравни повторяющиеся замечания техлида с ../dashboard/.agents/skills/self-review/SKILL.md.
-Предложи правки skills и промптов, но не меняй их, пока я не подтвержу.
+Analyze the review feedback in inbox/review-feedback/PR-01 … PR-10 following prompts/review-feedback-analyzer.md.
+Compare the tech lead's recurring comments with ../dashboard/.agents/skills/self-review/SKILL.md.
+Propose changes to skills and prompts, but do not apply them until I confirm.
 ```
 
-Анализ идёт по `feedback.md` и `context.md`. `comments.json` и `metadata.json` нужны только при импорте через API.
+The analysis uses `feedback.md` and `context.md`. `comments.json` and `metadata.json` are needed only for an API import.
 
 ## Prompt Builder
 
-Превращает неполный запрос и контекст в промпт для следующего запуска coding-агента. Сам ничего не правит: работает на чтение, приложение `../dashboard` использует только для проверки путей. Режимы: `research`, `plan`, `implement`, `debug`, `review`, `continue`. Если режим не указан, builder предложит его сам.
+Turns an incomplete request and its context into a prompt for the next coding-agent run. It changes nothing itself: it is read-only and uses `../dashboard` only to verify paths. Modes: `research`, `plan`, `implement`, `debug`, `review`, `continue`. If no mode is given, the builder recommends one.
 
-В чате Cursor, открытом в этой папке:
+In a Cursor chat opened on this folder:
 
 ```text
-Собери промпт по prompts/prompt-builder.md.
-mode: <research|plan|implement|debug|review|continue>   # необязательно
+Build a prompt following prompts/prompt-builder.md.
+mode: <research|plan|implement|debug|review|continue>   # optional
 
-<задача, контекст, ошибки/логи/diff, предыдущий ответ агента, ограничения>
+<task, context, errors/logs/diff, previous agent response, constraints>
 ```
 
-Ответ: режим с причиной, недостающий контекст (если важен), готовый промпт одним блоком, не больше трёх пунктов «почему». Промпт копируешь в новый чат, открытый на `../dashboard`.
+The answer contains the recommended mode with a reason, missing context (if it matters), the ready-to-copy prompt in one block, and at most three "why it matters" bullets. Copy the prompt into a new chat opened on `../dashboard`.
 
-Ручные тесты на трёх примерах: [`prompts/prompt-builder.examples.md`](prompts/prompt-builder.examples.md).
+Manual tests on three examples: [`prompts/prompt-builder.examples.md`](prompts/prompt-builder.examples.md).
 
-## Bitbucket importer (отложен)
+## Bitbucket importer (deferred)
 
-Импорт через API готов, но сейчас не используется: у корпоративного токена нет права `read:pullrequest:bitbucket`. Основной источник — ручная вставка.
+The API import is ready but not used right now: the corporate token lacks the `read:pullrequest:bitbucket` permission. The main source is manual paste.
 
-Если право появится, из корня этой папки:
+If the permission becomes available, from the root of this folder:
 
 ```bash
 cp .env.example .env
 cp config/review-feedback.example.json config/review-feedback.local.json
 node scripts/import-review-feedback.mjs --whoami
 node scripts/import-review-feedback.mjs --limit 10
-node scripts/import-review-feedback.mjs --pr <номер или URL>
+node scripts/import-review-feedback.mjs --pr <number or URL>
 node scripts/import-review-feedback.mjs --refresh
-node scripts/import-review-feedback.mjs --list   # без сети
+node scripts/import-review-feedback.mjs --list   # no network
 ```
 
-В `.env` задаются `BITBUCKET_API_TOKEN` и, при необходимости, идентификаторы автора и техлида (account id или UUID). В `config/review-feedback.example.json` указан `lavinmedia/dashboard-moved`. Определить remote автоматически нельзя, потому что эта папка не git-репозиторий.
+`.env` holds `BITBUCKET_API_TOKEN` and, if needed, the author and tech lead identifiers (account id or UUID). `config/review-feedback.example.json` points to `lavinmedia/dashboard-moved`. The repository cannot be detected automatically because this folder has no `bitbucket` git remote.
 
-Тесты (без сети):
+Tests (no network):
 
 ```bash
 node --test scripts/import-review-feedback.test.mjs

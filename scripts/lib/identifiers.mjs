@@ -141,16 +141,16 @@ export function parsePullRequestRef(input) {
   try {
     url = new URL(trimmed);
   } catch {
-    throw new Error('Ожидается номер PR или URL https://bitbucket.org/{workspace}/{repo}/pull-requests/{id}.');
+    throw new Error('Expected a PR number or a URL https://bitbucket.org/{workspace}/{repo}/pull-requests/{id}.');
   }
 
   if (url.hostname !== 'bitbucket.org') {
-    throw new Error('Ссылка должна вести на bitbucket.org.');
+    throw new Error('The link must point to bitbucket.org.');
   }
 
   const parts = url.pathname.split('/').filter((part) => part !== '');
   if (parts.length < 4 || parts[2] !== 'pull-requests' || !/^\d+$/.test(parts[3])) {
-    throw new Error('Ожидается URL вида https://bitbucket.org/{workspace}/{repo}/pull-requests/{id}.');
+    throw new Error('Expected a URL like https://bitbucket.org/{workspace}/{repo}/pull-requests/{id}.');
   }
 
   return {
@@ -205,13 +205,13 @@ export function assertBitbucketApiUrl(url) {
   try {
     parsed = new URL(url);
   } catch {
-    throw new Error('Отказ: некорректный URL API.');
+    throw new Error('Refused: invalid API URL.');
   }
   if (parsed.protocol !== 'https:' || parsed.hostname !== 'api.bitbucket.org') {
-    throw new Error('Отказ: запросы разрешены только к api.bitbucket.org.');
+    throw new Error('Refused: requests are allowed only to api.bitbucket.org.');
   }
   if (!parsed.pathname.startsWith('/2.0/')) {
-    throw new Error('Отказ: поддерживается только Bitbucket Cloud REST API 2.0.');
+    throw new Error('Refused: only the Bitbucket Cloud REST API 2.0 is supported.');
   }
 }
 

@@ -29,7 +29,7 @@ export function parseEnvFile(content) {
     }
     const match = /^(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(trimmed);
     if (!match) {
-      throw new Error('Не удалось прочитать .env: строка без KEY=VALUE.');
+      throw new Error('Failed to read .env: line without KEY=VALUE.');
     }
     let value = match[2].trim();
     if (
@@ -55,10 +55,10 @@ export async function loadEnvFile(filePath) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       return {};
     }
-    if (error instanceof Error && error.message.startsWith('Не удалось прочитать')) {
+    if (error instanceof Error && error.message.startsWith('Failed to read')) {
       throw error;
     }
-    throw new Error('Не удалось прочитать .env.');
+    throw new Error('Failed to read .env.');
   }
 }
 
@@ -75,13 +75,13 @@ export async function loadEnvFile(filePath) {
  */
 export function parseLocalConfig(raw) {
   if (!isRecord(raw)) {
-    throw new Error('review-feedback.local.json должен быть JSON-объектом.');
+    throw new Error('review-feedback.local.json must be a JSON object.');
   }
   const author = isRecord(raw.author) ? raw.author : {};
   const techLead = isRecord(raw.techLead) ? raw.techLead : {};
   const auth = raw.auth === undefined || raw.auth === '' ? '' : raw.auth;
   if (auth !== '' && auth !== 'bearer' && auth !== 'basic') {
-    throw new Error('Поле auth может быть только bearer или basic.');
+    throw new Error('The auth field can only be bearer or basic.');
   }
   return {
     workspace: optionalSlug(raw.workspace, 'workspace'),
@@ -167,7 +167,7 @@ export function parseCliArgs(argv) {
     if (token === '--pr') {
       const value = argv[index + 1];
       if (!value || value.startsWith('--')) {
-        throw new Error('После --pr нужен номер PR или URL.');
+        throw new Error('--pr requires a PR number or URL.');
       }
       parsed.pr = value;
       index += 1;
@@ -176,7 +176,7 @@ export function parseCliArgs(argv) {
     if (token === '--state') {
       const value = argv[index + 1];
       if (!value || !ALLOWED_STATES.includes(value)) {
-        throw new Error(`--state принимает только: ${ALLOWED_STATES.join(', ')}.`);
+        throw new Error(`--state accepts only: ${ALLOWED_STATES.join(', ')}.`);
       }
       parsed.states ??= [];
       parsed.states.push(value);
@@ -184,9 +184,9 @@ export function parseCliArgs(argv) {
       continue;
     }
     if (token === '--token' || token.startsWith('--token=')) {
-      throw new Error('Не передавайте токен аргументом. Используйте BITBUCKET_API_TOKEN.');
+      throw new Error('Do not pass the token as an argument. Use BITBUCKET_API_TOKEN.');
     }
-    throw new Error(`Неизвестный аргумент №${index + 1}. Токен нельзя передавать в командной строке. Смотрите --help.`);
+    throw new Error(`Unknown argument #${index + 1}. The token must not be passed on the command line. See --help.`);
   }
 
   return parsed;
@@ -208,16 +208,16 @@ export function resolveMode(args) {
   const errors = [];
   const modes = [args.list, args.whoami, args.refresh, args.all, args.pr !== null].filter(Boolean);
   if (modes.length > 1) {
-    errors.push('Укажите только один режим: --list, --whoami, --pr, --refresh или --all.');
+    errors.push('Specify only one mode: --list, --whoami, --pr, --refresh or --all.');
   }
   if (args.completed && args.states) {
-    errors.push('Используйте либо --completed, либо --state.');
+    errors.push('Use either --completed or --state.');
   }
   if ((args.pr !== null || args.refresh || args.list || args.whoami) && args.limit !== null) {
-    errors.push('--limit используется только для импорта последних PR.');
+    errors.push('--limit is used only when importing the latest PRs.');
   }
   if ((args.pr !== null || args.refresh || args.list || args.whoami) && (args.completed || args.states)) {
-    errors.push('Фильтр статуса используется с --limit и --all.');
+    errors.push('The status filter is used with --limit and --all.');
   }
 
   let limit = args.limit;
@@ -240,11 +240,11 @@ export function resolveMode(args) {
   }
 
   if (mode === 'recent' && (!Number.isInteger(limit) || limit < 1 || limit > 500)) {
-    errors.push('--limit должен быть целым числом от 1 до 500.');
+    errors.push('--limit must be an integer from 1 to 500.');
   }
   const maxPages = args.maxPages ?? 200;
   if (!Number.isInteger(maxPages) || maxPages < 1 || maxPages > 1000) {
-    errors.push('--max-pages должен быть целым числом от 1 до 1000.');
+    errors.push('--max-pages must be an integer from 1 to 1000.');
   }
 
   return {
@@ -280,12 +280,12 @@ export function resolveSettings(sources) {
   const workspace = firstNonEmpty(local?.workspace, remote?.workspace);
   const repoSlug = firstNonEmpty(local?.repoSlug, remote?.repoSlug);
   if (!workspace || !repoSlug) {
-    throw new Error('Не удалось определить workspace и slug. Укажите их в review-feedback.local.json или проверьте remote bitbucket.');
+    throw new Error('Could not determine workspace and slug. Set them in review-feedback.local.json or check the bitbucket remote.');
   }
 
   const authSource = firstNonEmpty(envValue('BITBUCKET_AUTH'), local?.auth, 'bearer');
   if (authSource !== 'bearer' && authSource !== 'basic') {
-    throw new Error('BITBUCKET_AUTH может быть только bearer или basic.');
+    throw new Error('BITBUCKET_AUTH can only be bearer or basic.');
   }
 
   const author = {
@@ -303,13 +303,13 @@ export function resolveSettings(sources) {
     ),
   };
   if (identitiesConflict(author, techLead)) {
-    throw new Error('Идентификатор техлида совпадает с вашим. Проверьте UUID и account id, скрипт их не угадывает.');
+    throw new Error('The tech lead identifier matches yours. Check the UUID and account id; the script does not guess them.');
   }
 
   const token = envValue('BITBUCKET_API_TOKEN');
   const atlassianEmail = firstNonEmpty(envValue('BITBUCKET_ATLASSIAN_EMAIL'), local?.atlassianEmail);
   if (authSource === 'basic' && atlassianEmail === '') {
-    throw new Error('Для auth=basic нужен Atlassian email в BITBUCKET_ATLASSIAN_EMAIL. Не используйте git email как догадку.');
+    throw new Error('auth=basic requires an Atlassian email in BITBUCKET_ATLASSIAN_EMAIL. Do not use the git email as a guess.');
   }
   assertValueIsNotToken(token, [workspace, repoSlug, atlassianEmail, author.uuid, author.accountId, techLead.uuid, techLead.accountId]);
 
@@ -333,7 +333,7 @@ export function resolveSettings(sources) {
 function readIntegerFlag(argv, index, flag) {
   const value = argv[index + 1];
   if (!value || !/^\d+$/.test(value)) {
-    throw new Error(`После ${flag} нужно целое число.`);
+    throw new Error(`${flag} requires an integer.`);
   }
   return Number(value);
 }
@@ -346,7 +346,7 @@ function readIntegerFlag(argv, index, flag) {
 function optionalSlug(value, label) {
   const text = optionalString(value);
   if (text !== '' && !SLUG_PATTERN.test(text)) {
-    throw new Error(`Поле ${label} содержит недопустимые символы.`);
+    throw new Error(`The ${label} field contains invalid characters.`);
   }
   return text;
 }
@@ -363,7 +363,7 @@ function optionalUuid(value, label) {
   }
   const uuid = normalizeUuid(text);
   if (uuid === '') {
-    throw new Error(`Поле ${label} не похоже на Bitbucket UUID. Укажите значение вида {8-4-4-4-12}, не имя.`);
+    throw new Error(`The ${label} field does not look like a Bitbucket UUID. Provide a value like {8-4-4-4-12}, not a name.`);
   }
   return uuid;
 }
@@ -380,7 +380,7 @@ function optionalAccountId(value, label) {
   }
   const accountId = normalizeAccountId(text);
   if (accountId === '') {
-    throw new Error(`Поле ${label} пустое или содержит пробелы.`);
+    throw new Error(`The ${label} field is empty or contains spaces.`);
   }
   return accountId;
 }
@@ -415,6 +415,6 @@ function assertValueIsNotToken(token, values) {
     return;
   }
   if (values.some((value) => value === token)) {
-    throw new Error('Похоже, токен записан в конфигурацию репозитория. Оставьте его только в окружении.');
+    throw new Error('The token appears to be written into the repository config. Keep it only in the environment.');
   }
 }

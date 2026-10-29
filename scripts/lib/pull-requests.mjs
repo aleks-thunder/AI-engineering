@@ -77,7 +77,7 @@ export function selectPullRequestsFromPages(pages, criteria) {
  */
 export function mapPullRequest(pullRequest, repo) {
   if (!isRecord(pullRequest) || typeof pullRequest.id !== 'number') {
-    throw new Error('Ответ PR не содержит числовой id.');
+    throw new Error('PR response has no numeric id.');
   }
   const links = isRecord(pullRequest.links) ? pullRequest.links : {};
   const selfLink = isRecord(links.self) && typeof links.self.href === 'string' ? links.self.href : null;

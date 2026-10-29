@@ -71,7 +71,7 @@ export async function bitbucketGetJson(url, options) {
       });
     } catch (error) {
       const message = redactSecrets(
-        error instanceof Error ? error.message : 'Сетевая ошибка',
+        error instanceof Error ? error.message : 'Network error',
         secrets,
       );
       lastError = new BitbucketApiError(message, {
@@ -88,7 +88,7 @@ export async function bitbucketGetJson(url, options) {
 
     if (response.status >= 300 && response.status < 400) {
       throw new BitbucketApiError(
-        `API вернул редирект (${response.status}). Запрос остановлен.`,
+        `API returned a redirect (${response.status}). Request stopped.`,
         { status: response.status, accessDenied: false, retryable: false },
       );
     }
@@ -103,7 +103,7 @@ export async function bitbucketGetJson(url, options) {
 
     if (RETRYABLE_STATUSES.has(response.status)) {
       const retryAfter = parseRetryAfter(response.headers?.get('retry-after') ?? null);
-      lastError = new BitbucketApiError(`Временная ошибка API (${response.status}).`, {
+      lastError = new BitbucketApiError(`Temporary API error (${response.status}).`, {
         status: response.status,
         accessDenied: false,
         retryable: true,
@@ -119,7 +119,7 @@ export async function bitbucketGetJson(url, options) {
     if (!response.ok) {
       const detail = extractErrorDetail(text, secrets);
       throw new BitbucketApiError(
-        detail === '' ? `Ошибка API (${response.status}).` : `Ошибка API (${response.status}): ${detail}`,
+        detail === '' ? `API error (${response.status}).` : `API error (${response.status}): ${detail}`,
         { status: response.status, accessDenied: false, retryable: false },
       );
     }
@@ -127,7 +127,7 @@ export async function bitbucketGetJson(url, options) {
     try {
       return JSON.parse(text);
     } catch {
-      throw new BitbucketApiError('Ответ API не является JSON.', {
+      throw new BitbucketApiError('API response is not JSON.', {
         status: response.status,
         accessDenied: false,
         retryable: false,
@@ -135,7 +135,7 @@ export async function bitbucketGetJson(url, options) {
     }
   }
 
-  throw lastError ?? new BitbucketApiError('Запрос к API не выполнен.', {
+  throw lastError ?? new BitbucketApiError('API request failed.', {
     status: 0,
     accessDenied: false,
     retryable: true,
@@ -160,7 +160,7 @@ export async function collectPages(firstUrl, options) {
 
   while (url) {
     if (seen.has(url)) {
-      throw new BitbucketApiError('Пагинация зациклилась. Загрузка остановлена.', {
+      throw new BitbucketApiError('Pagination looped. Loading stopped.', {
         status: 0,
         accessDenied: false,
         retryable: false,
@@ -174,7 +174,7 @@ export async function collectPages(firstUrl, options) {
     assertBitbucketApiUrl(url);
     const payload = await options.getJson(url);
     if (!isPage(payload)) {
-      throw new BitbucketApiError('Неполный ответ API: нет списка values.', {
+      throw new BitbucketApiError('Incomplete API response: no values list.', {
         status: 0,
         accessDenied: false,
         retryable: false,
@@ -222,9 +222,9 @@ function parseRetryAfter(value) {
  */
 function accessMessage(status) {
   if (status === 401) {
-    return 'Доступ отклонён (401). Проверьте токен и срок его действия.';
+    return 'Access denied (401). Check the token and its expiry.';
   }
-  return 'Недостаточно прав (403). Для чтения PR нужен scope read:pullrequest:bitbucket. Для --whoami нужен read:user:bitbucket.';
+  return 'Insufficient permissions (403). Reading PRs requires the read:pullrequest:bitbucket scope. --whoami requires read:user:bitbucket.';
 }
 
 /**

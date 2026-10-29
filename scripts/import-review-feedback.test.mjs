@@ -337,7 +337,7 @@ test('imports, refreshes, and keeps prior comments when access fails', async () 
     inboxDir: root,
     client: {
       getJson: async () => {
-        throw new BitbucketApiError('Недостаточно прав (403).', { status: 403, accessDenied: true, retryable: false });
+        throw new BitbucketApiError('Insufficient permissions (403).', { status: 403, accessDenied: true, retryable: false });
       },
     },
     now: () => '2026-01-03T00:00:00.000Z',
@@ -410,7 +410,7 @@ test('does not replace saved comments when comment pagination stops early', asyn
     },
   });
   assert.equal(partial.exitCode, 1);
-  assert.match(partial.lines.join('\n'), /не заменён/);
+  assert.match(partial.lines.join('\n'), /was not replaced/);
   const directory = path.join(root, 'PR-7-fixture-7');
   const comments = JSON.parse(await readFile(path.join(directory, 'comments.json'), 'utf8'));
   assert.deepEqual(comments.comments.map((comment) => comment.id), [7]);

@@ -1,5 +1,5 @@
-# Журнал анализа
+# Analysis log
 
-`review-log.jsonl` создаётся разбором по `prompts/review-feedback-analyzer.md`, не импортом.
+`review-log.jsonl` is produced by analysis following `prompts/review-feedback-analyzer.md`, not by the import.
 
-Одна строка — один подтверждённый к записи вывод: повторяемый паттерн, id PR и id комментариев, предложенное изменение skill. Полные тексты ревью сюда не копируются. Файл локальный и добавлен в `.gitignore`.
+One line is one finding confirmed for recording: a recurring pattern, the PR ids and comment ids, and the proposed skill change. Full review texts are not copied here. The file is local and listed in `.gitignore`.

@@ -1,66 +1,68 @@
-# Контекст
+# Context
 
-Я развиваю self-review skill для Angular-проекта на основе замечаний техлида из 10 исторических PR. Все комментарии в этих PR закрыты, код давно в проде.
+I am developing a self-review skill for an Angular project based on the tech lead's comments from 10 historical PRs. All comments in those PRs are closed and the code has been in production for a long time.
 
-Два репозитория, их нельзя путать:
-- **Текущий код:** GitHub `lavinmedia/dashboard`, локально `/Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard` (Angular 21.2.x, зональный, 188 из 206 компонентов OnPush). Сюда относятся skill и правила.
-- **Исторический источник ревью:** Bitbucket `lavinmedia/dashboard-moved`. Доступа к нему нет, данные лежат локально как вставки страниц.
+Two repositories, do not mix them up:
+- **Current code:** GitHub `lavinmedia/dashboard`, local `/Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard` (Angular 21.2.x, zone-based, 188 of 206 components OnPush). The skill and rules belong here.
+- **Historical review source:** Bitbucket `lavinmedia/dashboard-moved`. There is no access to it; the data is stored locally as page pastes.
 
-# Что уже сделано
+# What has been done
 
-1. **AI-workspace отделён от репозитория приложения.**
-   - Путь: `/Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard-ai-engineering/` (не git-репозиторий).
-   - Открывается через `dashboard-ai-engineering.code-workspace`, `../dashboard` подключён как read-only reference.
-   - Внутри:
-     - `inbox/review-feedback/PR-01…PR-10` (вставка страниц Bitbucket),
-     - `prompts/review-feedback-analyzer.md`,
-     - `references/review-feedback-analysis-report.md` (первый анализ),
-     - `data/review-log.jsonl` (10 записей `proposed`),
-     - `scripts/` (importer Bitbucket и тесты, не используется, не удалять),
+1. **The AI workspace is separated from the application repository.**
+   - Path: `/Users/aleksandrmojseenko/Documents/Capslock/Corporate/dashboard-ai-engineering/` (its own git repository, separate from the application).
+   - Opened through `dashboard-ai-engineering.code-workspace`, with `../dashboard` attached as a read-only reference.
+   - Contents:
+     - `inbox/review-feedback/PR-01…PR-10` (Bitbucket page pastes),
+     - `prompts/review-feedback-analyzer.md`, `prompts/prompt-builder.md`, `prompts/prompt-builder.examples.md`,
+     - `references/review-feedback-analysis-report.md` (first analysis),
+     - `data/review-log.jsonl` (10 `proposed` entries),
+     - `scripts/` (Bitbucket importer and tests, not used, do not delete),
      - `reports/self-review-improvement-decisions.md`.
-   - В репозитории приложения `ai-engineering/` удалён, `.gitignore` приложения возвращён к HEAD (HEAD `df9977e51`, `master`, remotes не менялись).
-2. **Проведён аудит 14 предложений** (10 из `review-log.jsonl` + 4 из §2.11 отчёта). Результат записан в `reports/self-review-improvement-decisions.md`, там же evidence, риски и черновики формулировок. ID: SR-01…SR-14.
+   - In the application repository `ai-engineering/` was removed and the application `.gitignore` was restored to HEAD (HEAD `df9977e51`, `master`, remotes unchanged).
+2. **14 proposals were audited** (10 from `review-log.jsonl` + 4 from §2.11 of the report). The result is in `reports/self-review-improvement-decisions.md`, including evidence, risks and draft wordings. IDs: SR-01…SR-14.
+3. **SR-01, 02, 03, 04, 06, 09 were applied** to `.agents/skills/self-review/SKILL.md` in the application repository (not committed there).
+4. **Prompt Builder** was added (`prompts/prompt-builder.md`) with three manual test examples. The examples have not been run.
+5. **The whole workspace was translated to English**, including importer messages. Raw pasted review data in `inbox/review-feedback/PR-*` was left unchanged.
 
-# Итоговые решения (ничего пока не внедрено)
+# Decisions
 
-- **ACCEPT (6):**
-  - SR-03: переписать секцию Change detection. Нынешний текст советует `markForCheck()` после записи в signal, и это противоречит замечаниям техлида.
-  - SR-02: уточнить `effect` и `linkedSignal`, а также случай «signal + emit того же значения».
-  - SR-01: механический проход по добавленным `?.` и `??` в Step 3.
-  - SR-06: три примера в bullet про мёртвые ветки.
-  - SR-04: сброс флага HTTP на пути success, error и finalize.
-  - SR-09: проверять runtime-контракт при правке union/литералов/валидации.
+- **ACCEPT (6), applied:**
+  - SR-03: rewrote the Change detection section. The old text advised `markForCheck()` after writing to a signal, which contradicted the tech lead's comments.
+  - SR-02: clarified `effect` and `linkedSignal`, and the "signal + emit the same value" case.
+  - SR-01: mechanical pass over added `?.` and `??` in Step 3.
+  - SR-06: three examples in the dead-branch bullet.
+  - SR-04: reset the HTTP flag on the success, error and finalize paths.
+  - SR-09: verify the runtime contract when changing unions/literals/validation.
 - **REJECT (5):** SR-05, SR-07, SR-11, SR-13, SR-14.
 - **DEFER (3):** SR-08, SR-10, SR-12.
-- **Порядок внедрения:** SR-03, SR-02, SR-01, SR-06, SR-04, SR-09.
-- Прежние отчёты ошибались в атрибуции PR и в счёте комментариев. Верить `reports/…decisions.md` (§3.3, §3.4), а не `references/…analysis-report.md`.
+- Earlier reports were wrong about PR attribution and comment counts. Trust `reports/…decisions.md` (§3.3, §3.4), not `references/…analysis-report.md`.
 
-# Ограничения (строго)
+# Constraints (strict)
 
-- Не менять существующий skill `.agents/skills/self-review/SKILL.md` и не внедрять ничего без моего явного «внедряй».
-- Не менять код приложения, `.gitignore`, ветки, историю и remotes.
-- Не коммитить и не пушить.
-- Не обращаться к Bitbucket и не пытаться аутентифицироваться.
-- Не читать и не печатать `.env` и любые токены.
-- Не использовать `any` и касты к `any`.
-- `.agents/skills/angular-developer/` вендорный, его не править. Локальные добавления идут в `.agents/skills/angular-developer-extras/`.
-- Одна миграция на ветку (правило репозитория).
-- Отвечать на русском, кратко.
-- Не заявлять, что тесты или проверка прошли, если их не запускали.
+- Do not change the application code, `.gitignore`, branches, history or remotes.
+- Do not change `.agents/skills/self-review/SKILL.md` further without my explicit "apply".
+- Do not commit or push.
+- Do not access Bitbucket and do not try to authenticate.
+- Do not read or print `.env` or any tokens.
+- Do not use `any` or casts to `any`.
+- `.agents/skills/angular-developer/` is vendored and must not be edited. Local additions go in `.agents/skills/angular-developer-extras/`.
+- One migration per branch (repository rule).
+- Answer in English, concisely.
+- Do not claim tests or checks passed if they were not run.
 
-# Что не проверено
+# Not verified
 
-- Фикстуры-диффы и сравнение результатов self-review до и после правки.
-- Количество нарушений правила `prefer-host-metadata-property` (SR-12).
-- Тесты importer после переезда workspace.
-- Фактическая работа `no-explicit-any` в lint (не запускалось).
-- Исход споров по PR 829 и 830, во вставке его нет.
-- Дата `2026-03-26` в `review-log.jsonl` и отчёте, вероятно, неверная.
+- Fixture diffs and a before/after comparison of self-review results.
+- The number of `prefer-host-metadata-property` violations (SR-12).
+- Actual behavior of `no-explicit-any` in lint (not run).
+- The outcome of the disputes in PR 829 and 830; the paste does not contain it.
+- The date `2026-03-26` in `review-log.jsonl` and the report is probably wrong.
+- Prompt Builder quality: the three examples have not been run.
 
-# Открытые вопросы
+# Open questions
 
-- SR-05: перевести в DEFER и добавить фразу про замену `Destroyable` и `takeUntil(destroy$)` на `DestroyRef` + `takeUntilDestroyed()`? Для этого команда должна подтвердить, что `Destroyable` устарел.
+- SR-05: move it to DEFER and add a phrase about replacing `Destroyable` and `takeUntil(destroy$)` with `DestroyRef` + `takeUntilDestroyed()`? The team would need to confirm that `Destroyable` is deprecated.
 
-# Что делать
+# What to do next
 
-Сначала прочитай `reports/self-review-improvement-decisions.md`, затем задай мне уточняющие вопросы, если они нужны. Реализацию начинай только после моего подтверждения и по одному пункту за раз, начиная с SR-03.
+Read `reports/self-review-improvement-decisions.md` first, then ask clarifying questions if needed. Do not apply further changes without my confirmation.

@@ -23,27 +23,27 @@ import {
   writeImportReport,
 } from './storage.mjs';
 
-export const HELP = `Импорт комментариев ревью из Bitbucket Cloud. Скрипт только читает API.
+export const HELP = `Import review comments from Bitbucket Cloud. The script only reads the API.
 
   node scripts/import-review-feedback.mjs --limit 10
-  node scripts/import-review-feedback.mjs --pr <URL или номер>
+  node scripts/import-review-feedback.mjs --pr <URL or number>
   node scripts/import-review-feedback.mjs --refresh
   node scripts/import-review-feedback.mjs --all
   node scripts/import-review-feedback.mjs --list
   node scripts/import-review-feedback.mjs --whoami
 
---limit <n>       Последние n своих PR. Без режима по умолчанию берётся 10.
---pr <url|id>     Один PR текущего репозитория.
---refresh         Обновить уже сохранённые PR.
---all             Все свои PR выбранных статусов.
---completed       Только MERGED. Вместе с --limit или --all.
---state <STATE>   OPEN, MERGED, DECLINED или SUPERSEDED. Можно повторять.
---max-pages <n>   Предел страниц списка PR. По умолчанию 200.
---list            Локальный список без сети.
---whoami          UUID и account id владельца токена.
+--limit <n>       Your latest n PRs. With no mode given, defaults to 10.
+--pr <url|id>     A single PR of the current repository.
+--refresh         Refresh already saved PRs.
+--all             All of your PRs in the selected states.
+--completed       MERGED only. Use with --limit or --all.
+--state <STATE>   OPEN, MERGED, DECLINED or SUPERSEDED. Can be repeated.
+--max-pages <n>   Page limit for the PR list. Default 200.
+--list            Local list, no network.
+--whoami          UUID and account id of the token owner.
 
-Отбор по умолчанию: sort=-updated_on, все статусы, страницы по next, первые N PR автора.
-Токен только из BITBUCKET_API_TOKEN или .env в корне workspace.
+Default selection: sort=-updated_on, all states, pages via next, first N PRs by the author.
+The token comes only from BITBUCKET_API_TOKEN or .env in the workspace root.
 `;
 
 /**
@@ -80,22 +80,22 @@ export async function runImport(options) {
   if (mode.mode === 'list') {
     const saved = await listSavedPullRequests(options.inboxDir);
     if (saved.length === 0) {
-      return { exitCode: 0, lines: ['Сохранённых PR нет.'], results: [] };
+      return { exitCode: 0, lines: ['No saved PRs.'], results: [] };
     }
     return {
       exitCode: 0,
-      lines: saved.map((item) => `PR ${item.id}: ${item.title || 'без названия'}; статус импорта ${item.status ?? 'не записан'}; комментариев ${item.commentCount ?? 'не записано'}`),
+      lines: saved.map((item) => `PR ${item.id}: ${item.title || 'untitled'}; import status ${item.status ?? 'not recorded'}; comments ${item.commentCount ?? 'not recorded'}`),
       results: [],
     };
   }
 
   if (!options.settings || !options.client) {
-    return { exitCode: 2, lines: ['Не заданы параметры запуска.'], results: [] };
+    return { exitCode: 2, lines: ['No run options given.'], results: [] };
   }
   if (options.settings.token === '') {
     return {
       exitCode: 2,
-      lines: ['Не задан BITBUCKET_API_TOKEN. Запишите его в окружение или в .env в корне workspace. Не отправляйте токен в чат.'],
+      lines: ['BITBUCKET_API_TOKEN is not set. Put it in the environment or in .env in the workspace root. Do not send the token to a chat.'],
       results: [],
     };
   }
@@ -113,10 +113,10 @@ export async function runImport(options) {
     return { ...configuredUser, results: [] };
   }
   if (!options.settings.techLead.uuid && !options.settings.techLead.accountId) {
-    runWarnings.push('Техлид не задан. Комментарии сохраняются, роль tech_lead не назначается. Укажите techLead.uuid или techLead.accountId.');
+    runWarnings.push('Tech lead is not set. Comments are saved, the tech_lead role is not assigned. Set techLead.uuid or techLead.accountId.');
   }
   if (!configuredUser.uuid && configuredUser.accountId) {
-    runWarnings.push('UUID автора не задан. Список PR фильтруется локально по account id и может занять больше страниц.');
+    runWarnings.push('Author UUID is not set. The PR list is filtered locally by account id and may take more pages.');
   }
 
   /** @type {{ id: number }[]} */
@@ -128,19 +128,19 @@ export async function runImport(options) {
     try {
       parsed = parsePullRequestRef(mode.pr ?? '');
     } catch (error) {
-      return { exitCode: 2, lines: [error instanceof Error ? error.message : 'Некорректный PR.'], results: [] };
+      return { exitCode: 2, lines: [error instanceof Error ? error.message : 'Invalid PR.'], results: [] };
     }
     if (parsed.workspace && parsed.workspace !== options.settings.workspace) {
       return {
         exitCode: 2,
-        lines: [`URL относится к workspace ${parsed.workspace}, конфигурация указывает ${options.settings.workspace}.`],
+        lines: [`The URL belongs to workspace ${parsed.workspace}, the config points to ${options.settings.workspace}.`],
         results: [],
       };
     }
     if (parsed.repoSlug && parsed.repoSlug !== options.settings.repoSlug) {
       return {
         exitCode: 2,
-        lines: [`URL относится к репозиторию ${parsed.repoSlug}, конфигурация указывает ${options.settings.repoSlug}.`],
+        lines: [`The URL belongs to repository ${parsed.repoSlug}, the config points to ${options.settings.repoSlug}.`],
         results: [],
       };
     }
@@ -148,7 +148,7 @@ export async function runImport(options) {
   } else if (mode.mode === 'refresh') {
     const saved = await listSavedPullRequests(options.inboxDir);
     if (saved.length === 0) {
-      return { exitCode: 0, lines: ['Сохранённых PR нет. Сначала выполните импорт с --limit или --pr.'], results: [] };
+      return { exitCode: 0, lines: ['No saved PRs. Run an import with --limit or --pr first.'], results: [] };
     }
     targets = saved.map((item) => ({ id: item.id }));
   } else {
@@ -181,7 +181,7 @@ export async function runImport(options) {
       });
       discovered = selected.pullRequests;
       if (!selected.complete) {
-        runWarnings.push('Список PR обрезан по --max-pages. Выборку нельзя считать полной.');
+        runWarnings.push('The PR list was truncated by --max-pages. The selection cannot be considered complete.');
       }
       targets = discovered.flatMap((pullRequest) => (
         typeof pullRequest.id === 'number' ? [{ id: pullRequest.id }] : []
@@ -193,7 +193,7 @@ export async function runImport(options) {
 
   if (targets.length === 0) {
     const lines = [
-      'Подходящих PR не найдено.',
+      'No matching PRs found.',
       ...runWarnings,
     ];
     await writeImportReport(options.inboxDir, {
@@ -202,7 +202,7 @@ export async function runImport(options) {
       warnings: runWarnings,
       results: [],
     });
-    return { exitCode: runWarnings.some((warning) => warning.includes('нельзя считать полной')) ? 1 : 0, lines, results: [] };
+    return { exitCode: runWarnings.some((warning) => warning.includes('cannot be considered complete')) ? 1 : 0, lines, results: [] };
   }
 
   /** @type {ImportResult[]} */
@@ -224,7 +224,7 @@ export async function runImport(options) {
   }
 
   const failed = results.some((result) => result.status !== 'complete')
-    || runWarnings.some((warning) => warning.includes('нельзя считать полной'));
+    || runWarnings.some((warning) => warning.includes('cannot be considered complete'));
   const lines = [
     ...runWarnings,
     ...results.flatMap((result) => formatResult(result)),
@@ -262,16 +262,16 @@ async function printCurrentUser(client, settings) {
     if (!user.uuid && !user.accountId) {
       return {
         exitCode: 1,
-        lines: ['API не вернул UUID или account id. Укажите их вручную в локальной конфигурации.'],
+        lines: ['The API did not return a UUID or account id. Set them manually in the local config.'],
         results: [],
       };
     }
     return {
       exitCode: 0,
       lines: [
-        `uuid: ${user.uuid || 'не передан'}`,
-        `account_id: ${user.accountId || 'не передан'}`,
-        `display_name: ${user.displayName ?? 'не передано'}`,
+        `uuid: ${user.uuid || 'not provided'}`,
+        `account_id: ${user.accountId || 'not provided'}`,
+        `display_name: ${user.displayName ?? 'not provided'}`,
         `workspace: ${settings.workspace}`,
         `repo: ${settings.repoSlug}`,
       ],
@@ -298,13 +298,13 @@ async function resolveConfiguredUser(client, settings, warnings) {
     if (!user.uuid && !user.accountId) {
       return {
         exitCode: 2,
-        lines: ['API не вернул идентификатор текущего пользователя. Укажите author.uuid вручную.'],
+        lines: ['The API did not return the current user identifier. Set author.uuid manually.'],
       };
     }
-    warnings.push('Автор взят из GET /2.0/user. Для этого нужен scope read:user:bitbucket.');
+    warnings.push('The author was taken from GET /2.0/user. This requires the read:user:bitbucket scope.');
     return { uuid: user.uuid, accountId: user.accountId };
   } catch (error) {
-    const hint = 'Укажите author.uuid или author.accountId в config/review-feedback.local.json. Скрипт не угадывает аккаунт.';
+    const hint = 'Set author.uuid or author.accountId in config/review-feedback.local.json. The script does not guess the account.';
     return { exitCode: error instanceof BitbucketApiError && error.accessDenied ? 2 : 1, lines: [errorLine(error), hint] };
   }
 }
@@ -340,7 +340,7 @@ async function importOne(input) {
   try {
     existing = await readExisting(input.inboxDir, input.id);
   } catch (error) {
-    empty.errors.push(error instanceof Error ? error.message : 'Не удалось прочитать сохранённые данные.');
+    empty.errors.push(error instanceof Error ? error.message : 'Failed to read saved data.');
     return empty;
   }
 
@@ -358,17 +358,17 @@ async function importOne(input) {
   try {
     pullRequest = mapPullRequest(payload, input.settings);
   } catch (error) {
-    empty.errors.push(error instanceof Error ? error.message : 'Неполный объект PR.');
+    empty.errors.push(error instanceof Error ? error.message : 'Incomplete PR object.');
     await recordFailure(input, empty, existing);
     return empty;
   }
   empty.title = pullRequest.title;
 
   if ((input.mode === 'pr' || input.mode === 'refresh') && !matchesIdentity(payload.author, input.configuredUser)) {
-    empty.warnings.push('PR создан не настроенным аккаунтом. Он сохранён, потому что запрошен явно или уже был в inbox.');
+    empty.warnings.push('The PR was not created by the configured account. It was saved because it was requested explicitly or was already in the inbox.');
   }
   if (!pullRequest.author.uuid && !pullRequest.author.accountId) {
-    empty.warnings.push('API не передал идентификатор автора PR. Роль pull_request_author не назначается.');
+    empty.warnings.push('The API did not provide the PR author identifier. The pull_request_author role is not assigned.');
   }
 
   let incoming = /** @type {import('./comments.mjs').StoredComment[]} */ ([]);
@@ -395,7 +395,7 @@ async function importOne(input) {
 
   if (!commentsComplete) {
     empty.status = 'partial';
-    empty.errors.push('Комментарии загружены не полностью. comments.json не заменён.');
+    empty.errors.push('Comments were not fully loaded. comments.json was not replaced.');
     empty.commentCount = existing?.comments.length ?? 0;
     empty.techLeadCommentCount = countRole(existing?.comments ?? [], 'tech_lead');
     await recordFailure(input, empty, existing, pullRequest);
@@ -404,7 +404,7 @@ async function importOne(input) {
 
   if (pullRequest.reportedCommentCount !== null && incoming.length < pullRequest.reportedCommentCount) {
     empty.warnings.push(
-      `API указал comment_count=${pullRequest.reportedCommentCount}, пагинация вернула ${incoming.length}.`,
+      `The API reported comment_count=${pullRequest.reportedCommentCount}, pagination returned ${incoming.length}.`,
     );
   }
 
@@ -419,14 +419,14 @@ async function importOne(input) {
     });
     if (!activity.complete) {
       activityStatus = 'failed';
-      empty.warnings.push('История activity загружена не полностью. Прежние события ревью сохранены.');
+      empty.warnings.push('Activity history was not fully loaded. Earlier review events were kept.');
     } else {
       reviewEvents = summarizeActivity(activity.pages.flat());
       activityStatus = 'complete';
     }
   } catch (error) {
     activityStatus = 'failed';
-    empty.warnings.push(`События ревью не обновлены: ${errorLine(error)}`);
+    empty.warnings.push(`Review events were not updated: ${errorLine(error)}`);
   }
 
   const status = activityStatus === 'complete' ? 'complete' : 'partial';
@@ -457,13 +457,13 @@ async function importOne(input) {
     });
     empty.directoryName = saved.directory.split(/[\\/]/).at(-1) ?? null;
     if (saved.feedbackStatus === 'preserved') {
-      empty.warnings.push('feedback.md не перезаписан: в нём нет маркера генератора. Заметки оставлены как есть.');
+      empty.warnings.push('feedback.md was not overwritten: it has no generator marker. Notes were left as they are.');
     }
     empty.status = status;
     empty.commentCount = merged.length;
     empty.techLeadCommentCount = countRole(merged, 'tech_lead');
   } catch (error) {
-    empty.errors.push(error instanceof Error ? error.message : 'Не удалось записать файлы.');
+    empty.errors.push(error instanceof Error ? error.message : 'Failed to write files.');
     empty.status = 'failed';
   }
   return empty;
@@ -476,7 +476,7 @@ async function importOne(input) {
 async function readExisting(inboxDir, id) {
   const directories = await findExistingPullRequestDirs(inboxDir, id);
   if (directories.length > 1) {
-    throw new Error(`Найдено несколько папок для PR ${id}. Импорт этого PR остановлен.`);
+    throw new Error(`Found several folders for PR ${id}. Import of this PR stopped.`);
   }
   if (directories.length === 0) {
     return null;
@@ -484,13 +484,13 @@ async function readExisting(inboxDir, id) {
   const metadata = await readJson(`${directories[0]}/metadata.json`);
   const commentsDocument = await readJson(`${directories[0]}/comments.json`);
   if (commentsDocument !== null && (!isRecord(commentsDocument) || !Array.isArray(commentsDocument.comments))) {
-    throw new Error('comments.json повреждён. Файл не перезаписан автоматически.');
+    throw new Error('comments.json is corrupted. The file was not overwritten automatically.');
   }
   const comments = commentsDocument && isRecord(commentsDocument)
     ? commentsDocument.comments.filter((comment) => isRecord(comment) && typeof comment.id === 'number')
     : [];
   if (commentsDocument && isRecord(commentsDocument) && comments.length !== commentsDocument.comments.length) {
-    throw new Error('comments.json содержит комментарий без id. Файл не перезаписан автоматически.');
+    throw new Error('comments.json contains a comment without an id. The file was not overwritten automatically.');
   }
   const reviewEvents = isRecord(metadata)
     && isRecord(metadata.pullRequest)
@@ -538,7 +538,7 @@ async function recordFailure(input, result, existing, pullRequest = null) {
     });
     result.directoryName = saved.directory.split(/[\\/]/).at(-1) ?? null;
   } catch (error) {
-    result.errors.push(error instanceof Error ? error.message : 'Не удалось записать статус ошибки.');
+    result.errors.push(error instanceof Error ? error.message : 'Failed to write the error status.');
   }
 }
 
@@ -621,7 +621,7 @@ function pullRequestUrl(settings, id) {
  */
 function asRecord(value) {
   if (!isRecord(value)) {
-    throw new Error('Ответ PR не является объектом.');
+    throw new Error('PR response is not an object.');
   }
   return value;
 }
@@ -633,7 +633,7 @@ function errorLine(error) {
   if (error instanceof Error) {
     return error.message;
   }
-  return 'Неизвестная ошибка API.';
+  return 'Unknown API error.';
 }
 
 /**
@@ -643,8 +643,8 @@ function errorLine(error) {
 function formatResult(result) {
   const folder = result.directoryName ? ` → ${result.directoryName}` : '';
   return [
-    `PR ${result.id}: ${result.title || 'без названия'}; ${result.status}; комментариев ${result.commentCount}; техлида ${result.techLeadCommentCount}${folder}`,
-    ...result.warnings.map((warning) => `  предупреждение: ${warning}`),
-    ...result.errors.map((error) => `  ошибка: ${error}`),
+    `PR ${result.id}: ${result.title || 'untitled'}; ${result.status}; comments ${result.commentCount}; tech lead ${result.techLeadCommentCount}${folder}`,
+    ...result.warnings.map((warning) => `  warning: ${warning}`),
+    ...result.errors.map((error) => `  error: ${error}`),
   ];
 }

@@ -35,7 +35,7 @@ export async function runFromCli(argv, env, dependencies = {}) {
   } catch (error) {
     return {
       exitCode: 2,
-      lines: [error instanceof Error ? error.message : 'Некорректные аргументы.'],
+      lines: [error instanceof Error ? error.message : 'Invalid arguments.'],
     };
   }
 
@@ -56,7 +56,7 @@ export async function runFromCli(argv, env, dependencies = {}) {
   } catch (error) {
     return {
       exitCode: 2,
-      lines: [error instanceof Error ? error.message : 'Не удалось прочитать .env.'],
+      lines: [error instanceof Error ? error.message : 'Failed to read .env.'],
     };
   }
 
@@ -64,7 +64,7 @@ export async function runFromCli(argv, env, dependencies = {}) {
   if (token.length >= 8 && argv.some((argument) => argument.includes(token))) {
     return {
       exitCode: 2,
-      lines: ['Токен передан в командной строке. Уберите его из аргументов и оставьте в окружении.'],
+      lines: ['The token was passed on the command line. Remove it from the arguments and keep it in the environment.'],
     };
   }
 
@@ -76,10 +76,10 @@ export async function runFromCli(argv, env, dependencies = {}) {
   } catch (error) {
     if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {
       const message = error instanceof SyntaxError
-        ? 'review-feedback.local.json не является JSON.'
+        ? 'review-feedback.local.json is not valid JSON.'
         : error instanceof Error
           ? error.message
-          : 'Не удалось прочитать локальную конфигурацию.';
+          : 'Failed to read the local config.';
       return { exitCode: 2, lines: [redactSecrets(message, [token])] };
     }
   }
@@ -97,7 +97,7 @@ export async function runFromCli(argv, env, dependencies = {}) {
   } catch (error) {
     return {
       exitCode: 2,
-      lines: [redactSecrets(error instanceof Error ? error.message : 'Ошибка конфигурации.', [token])],
+      lines: [redactSecrets(error instanceof Error ? error.message : 'Configuration error.', [token])],
     };
   }
 
@@ -166,7 +166,7 @@ if (invokedDirectly()) {
       process.exitCode = outcome.exitCode;
     })
     .catch(() => {
-      console.error('Импорт прерван.');
+      console.error('Import aborted.');
       process.exitCode = 1;
     });
 }

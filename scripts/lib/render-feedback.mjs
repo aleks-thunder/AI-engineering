@@ -16,14 +16,14 @@ export function renderFeedback(comments, pullRequest, importedAt) {
   const lines = [
     GENERATED_MARKER,
     '',
-    `# PR ${pullRequest.id}: ${pullRequest.title || 'без названия'}`,
+    `# PR ${pullRequest.id}: ${pullRequest.title || 'untitled'}`,
     '',
-    `- Состояние: ${pullRequest.state ?? 'не передано'}`,
-    `- Автор PR: ${pullRequest.author.displayName ?? 'имя не передано'} (${pullRequest.author.uuid || 'uuid не передан'})`,
-    `- Ссылка: ${pullRequest.url}`,
-    `- Импорт: ${importedAt}`,
+    `- State: ${pullRequest.state ?? 'not provided'}`,
+    `- PR author: ${pullRequest.author.displayName ?? 'name not provided'} (${pullRequest.author.uuid || 'uuid not provided'})`,
+    `- Link: ${pullRequest.url}`,
+    `- Imported: ${importedAt}`,
     '',
-    'Ниже исходная история ревью. Комментарий сам по себе не считается ошибкой: вопросы, предложения и обсуждения оставлены без классификации.',
+    'Below is the original review history. A comment on its own is not treated as a defect: questions, suggestions and discussions are left unclassified.',
     '',
   ];
 
@@ -33,15 +33,15 @@ export function renderFeedback(comments, pullRequest, importedAt) {
     if (comment.kind === 'general') {
       continue;
     }
-    const path = comment.inline?.path ?? 'файл не указан';
+    const path = comment.inline?.path ?? 'file not specified';
     const group = byFile.get(path) ?? [];
     group.push(comment);
     byFile.set(path, group);
   }
 
-  lines.push('## Общие комментарии', '');
+  lines.push('## General comments', '');
   if (general.length === 0) {
-    lines.push('Нет.', '');
+    lines.push('None.', '');
   } else {
     for (const comment of general) {
       lines.push(...renderComment(comment), '');
@@ -68,26 +68,26 @@ export function isGeneratedFeedback(content) {
  */
 function renderComment(comment) {
   const location = comment.inline
-    ? `строки from ${formatLine(comment.inline.from)} to ${formatLine(comment.inline.to)}`
-    : 'без привязки к строке';
-  const parent = comment.parentId === null ? 'корень треда' : `ответ на #${comment.parentId}`;
+    ? `lines from ${formatLine(comment.inline.from)} to ${formatLine(comment.inline.to)}`
+    : 'not tied to a line';
+  const parent = comment.parentId === null ? 'thread root' : `reply to #${comment.parentId}`;
   const flags = [
-    comment.deleted === true ? 'удалён' : '',
-    comment.pending === true ? 'черновик' : '',
-    comment.absentFromLatestCompleteImport ? 'не пришёл в последнем полном импорте' : '',
+    comment.deleted === true ? 'deleted' : '',
+    comment.pending === true ? 'draft' : '',
+    comment.absentFromLatestCompleteImport ? 'absent from the latest complete import' : '',
   ].filter((flag) => flag !== '');
   const lines = [
-    `### #${comment.id} · ${comment.authorRole} · ${comment.kind} · ${comment.author.displayName ?? (comment.author.uuid || 'автор не передан')}`,
+    `### #${comment.id} · ${comment.authorRole} · ${comment.kind} · ${comment.author.displayName ?? (comment.author.uuid || 'author not provided')}`,
     '',
-    `- Когда: ${comment.createdOn ?? 'не передано'}`,
-    `- Где: ${location}`,
-    `- Тред: ${parent}; статус: ${comment.threadStatus}`,
-    `- Ссылка: ${comment.links.html ?? 'API не передал html-ссылку'}`,
+    `- When: ${comment.createdOn ?? 'not provided'}`,
+    `- Where: ${location}`,
+    `- Thread: ${parent}; status: ${comment.threadStatus}`,
+    `- Link: ${comment.links.html ?? 'API did not provide an html link'}`,
   ];
   if (flags.length > 0) {
-    lines.push(`- Отметки: ${flags.join(', ')}`);
+    lines.push(`- Flags: ${flags.join(', ')}`);
   }
-  lines.push('', comment.contentRaw === '' ? 'Текст не передан.' : comment.contentRaw);
+  lines.push('', comment.contentRaw === '' ? 'No text provided.' : comment.contentRaw);
   return lines;
 }
 
@@ -96,7 +96,7 @@ function renderComment(comment) {
  * @returns {string}
  */
 function lineLabel(line) {
-  return line === null ? 'не передана' : String(line);
+  return line === null ? 'not provided' : String(line);
 }
 
 function formatLine(line) {

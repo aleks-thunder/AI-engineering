@@ -60,7 +60,7 @@ import {
  */
 export function mapComment(comment, identities) {
   if (!isRecord(comment) || typeof comment.id !== 'number' || !Number.isInteger(comment.id)) {
-    throw new Error('Комментарий без стабильного числового id пропущен как неполный.');
+    throw new Error('Comment without a stable numeric id skipped as incomplete.');
   }
 
   const parentId = isRecord(comment.parent) ? optionalInteger(comment.parent.id) : null;

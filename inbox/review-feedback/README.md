@@ -1,12 +1,12 @@
 # Inbox review feedback
 
-Локальные данные импорта. Папки `PR-*` и `last-import-report.json` не коммитятся.
+Local import data. The `PR-*` folders and `last-import-report.json` are not committed.
 
-В каждой папке PR:
+Each PR folder contains:
 
-- `metadata.json` — карточка PR и статус импорта; поле `notes` не затирается
-- `comments.json` — исходные комментарии
-- `feedback.md` — сгенерированное чтение; правьте его только если удалили первую строку-маркер, иначе следующий импорт перезапишет файл
-- `context.md` — заметки о задаче; импорт создаёт шаблон один раз и дальше не трогает
+- `metadata.json`: PR card and import status; the `notes` field is never overwritten
+- `comments.json`: original comments
+- `feedback.md`: generated readable view; edit it only if you removed the first marker line, otherwise the next import overwrites the file
+- `context.md`: notes about the task; the import creates the template once and never touches it again
 
-Комментарий в этих файлах ещё не классифицирован.
+Comments in these files are not yet classified.

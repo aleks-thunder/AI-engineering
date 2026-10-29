@@ -3,12 +3,12 @@ import path from 'node:path';
 import { isRecord, pullRequestDirectoryName } from './identifiers.mjs';
 import { isGeneratedFeedback } from './render-feedback.mjs';
 
-const CONTEXT_TEMPLATE = `# Контекст PR
+const CONTEXT_TEMPLATE = `# PR context
 
-Этот файл для ваших заметок. Повторный импорт его не перезаписывает.
+This file is for your notes. Re-importing does not overwrite it.
 
-- Задача:
-- Что важно при разборе ревью:
+- Task:
+- What matters when analyzing the review:
 `;
 
 /**
@@ -100,7 +100,7 @@ export async function listSavedPullRequests(inboxDir) {
 export async function savePullRequestBundle(bundle) {
   const matches = await findExistingPullRequestDirs(bundle.inboxDir, bundle.pullRequest.id);
   if (matches.length > 1) {
-    throw new Error(`Найдено несколько папок для PR ${bundle.pullRequest.id}. Запись остановлена, чтобы не создать дубликат.`);
+    throw new Error(`Found several folders for PR ${bundle.pullRequest.id}. Write stopped to avoid creating a duplicate.`);
   }
 
   const directory = matches[0]
@@ -120,7 +120,7 @@ export async function savePullRequestBundle(bundle) {
   if (feedbackStatus === 'preserved' && isRecord(metadata.import) && Array.isArray(metadata.import.warnings)) {
     metadata.import.warnings = [
       ...metadata.import.warnings,
-      'feedback.md не перезаписан: в нём нет маркера генератора. Заметки оставлены как есть.',
+      'feedback.md was not overwritten: it has no generator marker. Notes were left as they are.',
     ];
   }
   await writeFile(metadataPath, `${JSON.stringify(metadata, null, 2)}\n`, 'utf8');
@@ -192,7 +192,7 @@ export async function readJson(filePath) {
       return null;
     }
     if (error instanceof SyntaxError) {
-      throw new Error(`${path.basename(filePath)} повреждён. Файл не перезаписан автоматически.`);
+      throw new Error(`${path.basename(filePath)} is corrupted. The file was not overwritten automatically.`);
     }
     throw error;
   }
